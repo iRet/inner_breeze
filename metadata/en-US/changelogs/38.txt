@@ -1,0 +1,4 @@
+* Add precise breathe control
+* Add recovery pause preference
+* Turn off sound on 0 volume
+

@@ -16,6 +16,7 @@ class BreathingConfigurationState extends State<BreathingConfiguration> {
   double secondsPerBreath = 1.668; // Default tempo in seconds
   String animationCommand = 'repeat';
   int recoveryPause = 15;
+  bool breathsPrecise = false;
 
   @override
   void initState() {
@@ -25,11 +26,18 @@ class BreathingConfigurationState extends State<BreathingConfiguration> {
 
   Future<void> _loadUserPreferences() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final prefs = await userProvider.loadUserPreferences(['breaths', 'tempo', 'volume', 'recoveryPause']);
+    final prefs = await userProvider.loadUserPreferences([
+      'breaths', 
+      'breathsPrecise',
+      'tempo', 
+      'volume', 
+      'recoveryPause',
+    ]);
 
     setState(() {
       secondsPerBreath = prefs.tempo / 1000; // Convert milliseconds to seconds
       breaths = prefs.breaths;
+      breathsPrecise = prefs.breathsPrecise;
       volume = prefs.volume;
       recoveryPause = prefs.recoveryPause;
     });
@@ -40,6 +48,7 @@ class BreathingConfigurationState extends State<BreathingConfiguration> {
     final preferences = Preferences(
       tempo: (secondsPerBreath * 1000).round(), // Convert seconds to milliseconds
       breaths: breaths,
+      breathsPrecise: breathsPrecise,
       volume: volume,
       recoveryPause: recoveryPause,
     );
@@ -70,6 +79,14 @@ class BreathingConfigurationState extends State<BreathingConfiguration> {
     _updateUser();
   }
 
+  void _updateBreathsPrecise() {
+    setState(() {
+      breathsPrecise = !breathsPrecise;
+      animationCommand = 'repeat';
+    });
+    _updateUser();
+  }
+
   void _updateRecoveryPause(double newPause) {
     setState(() {
       recoveryPause = newPause.toInt();
@@ -83,6 +100,14 @@ class BreathingConfigurationState extends State<BreathingConfiguration> {
     if (seconds < 1.5) return 'tempo_fast'.i18n();
     if (seconds < 2) return 'tempo_medium'.i18n();
     return 'tempo_slow'.i18n();
+  }
+
+  String _getVolumeLabel(double volume) {
+    String label = volume.round().toString();
+    if (volume == 0) {
+      label += ' (no sound)';
+    }
+    return label;
   }
 
   @override
@@ -128,7 +153,7 @@ class BreathingConfigurationState extends State<BreathingConfiguration> {
         Slider(
           min: 0.0,
           max: 100.0,
-          label: '${volume.round()}%',
+          label: _getVolumeLabel(volume.toDouble()),
           divisions: 10,
           value: volume.toDouble(),
           onChanged: (dynamic value) {
@@ -136,22 +161,50 @@ class BreathingConfigurationState extends State<BreathingConfiguration> {
           },
         ),
         SizedBox(height: 10),
-        Text(
-          'breaths_label'.i18n(),
-          style: TextStyle(
-            fontSize: 22.0,
-            fontWeight: FontWeight.bold,
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'breaths_label'.i18n(),
+                    style: TextStyle(
+                      fontSize: 22.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  IconButton(
+                    icon: Icon(
+                      breathsPrecise 
+                          ? Icons.precision_manufacturing 
+                          : Icons.precision_manufacturing_outlined,
+                      size: 20,
+                      color: breathsPrecise 
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                    onPressed: () {
+                      _updateBreathsPrecise();
+                    },
+                    tooltip: 'Precise control',
+                  ),
+                ],
+              ),
+              Slider(
+                min: 20.0,
+                max: 40.0,
+                label: '${breaths.round()}',
+                divisions: breathsPrecise ? 20 : 4,
+                value: breaths.toDouble(),
+                onChanged: (dynamic value) {
+                  _updateBreaths(value);
+                },
+              ),
+            ],
           ),
-        ),
-        Slider(
-          min: 20.0,
-          max: 40.0,
-          label: '${breaths.round()}',
-          divisions: 4,
-          value: breaths.toDouble(),
-          onChanged: (dynamic value) {
-            _updateBreaths(value);
-          },
         ),
         SizedBox(height: 10),
         Text(
