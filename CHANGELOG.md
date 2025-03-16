@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.4.1] - 2025-03-16
+- Attempt to fix github actions
+
 ## [1.4.0] - 2025-03-14
 - Add precise breathe control
 - Add recovery pause preference
