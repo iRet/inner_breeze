@@ -42,7 +42,7 @@ jobs:
         java-version: '17'
 
     - name: Cache Flutter SDK and dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           ~/.pub-cache
@@ -85,7 +85,7 @@ jobs:
       uses: actions/checkout@v3
     
     - name: Cache Flutter SDK
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           ~/.pub-cache
